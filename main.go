@@ -20,26 +20,26 @@ import (
 
 func main() {
 	var (
-		Name                  = "elasticsearch_exporter"
-		listenAddress         = flag.String("web.listen-address", ":9108", "Address to listen on for web interface and telemetry.")
-		metricsPath           = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
-		esURI                 = flag.String("es.uri", "http://localhost:9200", "HTTP API address of an Elasticsearch node.")
-		esTimeout             = flag.Duration("es.timeout", 5*time.Second, "Timeout for trying to get stats from Elasticsearch.")
-		esAllNodes            = flag.Bool("es.all", false, "Export stats for all nodes in the cluster. If used, this flag will override the flag es.node.")
-		esNode                = flag.String("es.node", "_local", "Node's name of which metrics should be exposed.")
-		esExportIndices       = flag.Bool("es.indices", false, "Export stats for indices in the cluster.")
-		esExportClusterSettings = flag.Bool("es.cluster_settings", false, "Export stats for cluster settings.")		
-		esExportShards        = flag.Bool("es.shards", false, "Export stats for shards in the cluster (implies es.indices=true).")
-		esExportSnapshots     = flag.Bool("es.snapshots", false, "Export stats for the cluster snapshots.")
-		esClusterInfoInterval = flag.Duration("es.clusterinfo.interval", 5*time.Minute, "Cluster info update interval for the cluster label")
-                esCA                  = flag.String("es.ca", "", "Path to PEM file that contains trusted Certificate Authorities for the Elasticsearch connection.")
-		esClientPrivateKey    = flag.String("es.client-private-key", "", "Path to PEM file that contains the private key for client auth when connecting to Elasticsearch.")
-		esClientCert          = flag.String("es.client-cert", "", "Path to PEM file that contains the corresponding cert for the private key to connect to Elasticsearch.")
-		esInsecureSkipVerify  = flag.Bool("es.ssl-skip-verify", false, "Skip SSL verification when connecting to Elasticsearch.")
-		logLevel              = flag.String("log.level", "info", "Sets the loglevel. Valid levels are debug, info, warn, error")
-		logFormat             = flag.String("log.format", "logfmt", "Sets the log format. Valid formats are json and logfmt")
-		logOutput             = flag.String("log.output", "stdout", "Sets the log output. Valid outputs are stdout and stderr")
-		showVersion           = flag.Bool("version", false, "Show version and exit")
+		Name                    = "elasticsearch_exporter"
+		listenAddress           = flag.String("web.listen-address", ":9108", "Address to listen on for web interface and telemetry.")
+		metricsPath             = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
+		esURI                   = flag.String("es.uri", "http://localhost:9200", "HTTP API address of an Elasticsearch node.")
+		esTimeout               = flag.Duration("es.timeout", 5*time.Second, "Timeout for trying to get stats from Elasticsearch.")
+		esAllNodes              = flag.Bool("es.all", false, "Export stats for all nodes in the cluster. If used, this flag will override the flag es.node.")
+		esNode                  = flag.String("es.node", "_local", "Node's name of which metrics should be exposed.")
+		esExportIndices         = flag.Bool("es.indices", false, "Export stats for indices in the cluster.")
+		esExportClusterSettings = flag.Bool("es.cluster_settings", false, "Export stats for cluster settings.")
+		esExportShards          = flag.Bool("es.shards", false, "Export stats for shards in the cluster (implies es.indices=true).")
+		esExportSnapshots       = flag.Bool("es.snapshots", false, "Export stats for the cluster snapshots.")
+		esClusterInfoInterval   = flag.Duration("es.clusterinfo.interval", 5*time.Minute, "Cluster info update interval for the cluster label")
+		esCA                    = flag.String("es.ca", "", "Path to PEM file that contains trusted Certificate Authorities for the Elasticsearch connection.")
+		esClientPrivateKey      = flag.String("es.client-private-key", "", "Path to PEM file that contains the private key for client auth when connecting to Elasticsearch.")
+		esClientCert            = flag.String("es.client-cert", "", "Path to PEM file that contains the corresponding cert for the private key to connect to Elasticsearch.")
+		esInsecureSkipVerify    = flag.Bool("es.ssl-skip-verify", false, "Skip SSL verification when connecting to Elasticsearch.")
+		logLevel                = flag.String("log.level", "info", "Sets the loglevel. Valid levels are debug, info, warn, error")
+		logFormat               = flag.String("log.format", "logfmt", "Sets the log format. Valid formats are json and logfmt")
+		logOutput               = flag.String("log.output", "stdout", "Sets the log output. Valid outputs are stdout and stderr")
+		showVersion             = flag.Bool("version", false, "Show version and exit")
 	)
 	flag.Parse()
 
@@ -91,6 +91,10 @@ func main() {
 			_ = level.Error(logger).Log("msg", "failed to register indices collector in cluster info")
 			os.Exit(1)
 		}
+	}
+
+	if *esExportClusterSettings {
+		prometheus.MustRegister(collector.NewClusterSettings(logger, httpClient, esURL))
 	}
 
 	if *esExportSnapshots {
