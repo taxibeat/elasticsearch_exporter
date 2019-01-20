@@ -1,10 +1,5 @@
 package collector
 
-// // AllSettingsFullResponse is a representation of a Elasticsearch Cluster Settings
-// type AllSettingsFullResponse struct {
-// 	Indexes map[string]Indexes `json:`
-// }
-
 // AllSettingsResponse is a representation of a Elasticsearch Cluster Settings
 type AllSettingsResponse map[string]Indexes
 
