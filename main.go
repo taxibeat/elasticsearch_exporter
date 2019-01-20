@@ -82,6 +82,7 @@ func main() {
 	}
 	if *esExportClusterSettings {
 		prometheus.MustRegister(collector.NewClusterSettings(logger, httpClient, esURL))
+		prometheus.MustRegister(collector.NewAllSettings(logger, httpClient, esURL))
 	}
 	http.Handle(*metricsPath, prometheus.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
