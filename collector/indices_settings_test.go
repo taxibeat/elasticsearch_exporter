@@ -12,7 +12,7 @@ import (
 
 func TestIndicesSettings(t *testing.T) {
 	// Testcases created using:
-	//  docker run -d -p 9200:9200 elasticsearch:VERSION-alpine
+	//  docker run -d -p 9200:9200 elasticsearch:VERSION
 	// curl -XPUT http://localhost:9200/twitter
 	// curl -XPUT http://localhost:9200/facebook
 	// curl -XPUT http://localhost:9200/instagram
