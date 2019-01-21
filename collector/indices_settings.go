@@ -12,8 +12,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// AllSettings information struct
-type AllSettings struct {
+// IndicesSettings information struct
+type IndicesSettings struct {
 	logger log.Logger
 	client *http.Client
 	url    *url.URL
@@ -23,41 +23,41 @@ type AllSettings struct {
 	totalScrapes, jsonParseFailures prometheus.Counter
 }
 
-// NewAllSettings defines All Settings Prometheus metrics
-func NewAllSettings(logger log.Logger, client *http.Client, url *url.URL) *AllSettings {
-	return &AllSettings{
+// NewIndicesSettings defines Indices Settings Prometheus metrics
+func NewIndicesSettings(logger log.Logger, client *http.Client, url *url.URL) *IndicesSettings {
+	return &IndicesSettings{
 		logger: logger,
 		client: client,
 		url:    url,
 
 		up: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: prometheus.BuildFQName(namespace, "allsettings_stats", "up"),
-			Help: "Was the last scrape of the ElasticSearch all settings endpoint successful.",
+			Name: prometheus.BuildFQName(namespace, "indices_settings_stats", "up"),
+			Help: "Was the last scrape of the ElasticSearch Indices Settings endpoint successful.",
 		}),
 		totalScrapes: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: prometheus.BuildFQName(namespace, "allsettings_stats", "total_scrapes"),
-			Help: "Current total ElasticSearch all settings scrapes.",
+			Name: prometheus.BuildFQName(namespace, "indices_settings_stats", "total_scrapes"),
+			Help: "Current total ElasticSearch Indices Settings scrapes.",
 		}),
 		readOnlyIndices: prometheus.NewGauge(prometheus.GaugeOpts{
-			Name: prometheus.BuildFQName(namespace, "allsettings_stats", "read_only_indices"),
+			Name: prometheus.BuildFQName(namespace, "indices_settings_stats", "read_only_indices"),
 			Help: "Current number of read only indices within cluster",
 		}),
 		jsonParseFailures: prometheus.NewCounter(prometheus.CounterOpts{
-			Name: prometheus.BuildFQName(namespace, "allsettings_stats", "json_parse_failures"),
+			Name: prometheus.BuildFQName(namespace, "indices_settings_stats", "json_parse_failures"),
 			Help: "Number of errors while parsing JSON.",
 		}),
 	}
 }
 
 // Describe add Snapshots metrics descriptions
-func (cs *AllSettings) Describe(ch chan<- *prometheus.Desc) {
+func (cs *IndicesSettings) Describe(ch chan<- *prometheus.Desc) {
 	ch <- cs.up.Desc()
 	ch <- cs.totalScrapes.Desc()
 	ch <- cs.readOnlyIndices.Desc()
 	ch <- cs.jsonParseFailures.Desc()
 }
 
-func (cs *AllSettings) getAndParseURL(u *url.URL, data interface{}) error {
+func (cs *IndicesSettings) getAndParseURL(u *url.URL, data interface{}) error {
 	res, err := cs.client.Get(u.String())
 	if err != nil {
 		return fmt.Errorf("failed to get from %s://%s:%s%s: %s",
@@ -85,11 +85,11 @@ func (cs *AllSettings) getAndParseURL(u *url.URL, data interface{}) error {
 	return nil
 }
 
-func (cs *AllSettings) fetchAndDecodeAllSettingsStats() (AllSettingsResponse, error) {
+func (cs *IndicesSettings) fetchAndDecodeIndicesSettings() (IndicesSettingsResponse, error) {
 
 	u := *cs.url
 	u.Path = path.Join(u.Path, "/_all/_settings")
-	var asr AllSettingsResponse
+	var asr IndicesSettingsResponse
 	err := cs.getAndParseURL(&u, &asr)
 	if err != nil {
 		return asr, err
@@ -98,8 +98,8 @@ func (cs *AllSettings) fetchAndDecodeAllSettingsStats() (AllSettingsResponse, er
 	return asr, err
 }
 
-// Collect gets all settings metric values
-func (cs *AllSettings) Collect(ch chan<- prometheus.Metric) {
+// Collect gets all indices settings metric values
+func (cs *IndicesSettings) Collect(ch chan<- prometheus.Metric) {
 
 	cs.totalScrapes.Inc()
 	defer func() {
@@ -109,7 +109,7 @@ func (cs *AllSettings) Collect(ch chan<- prometheus.Metric) {
 		ch <- cs.readOnlyIndices
 	}()
 
-	asr, err := cs.fetchAndDecodeAllSettingsStats()
+	asr, err := cs.fetchAndDecodeIndicesSettings()
 	if err != nil {
 		cs.readOnlyIndices.Set(0)
 		cs.up.Set(0)
@@ -123,7 +123,7 @@ func (cs *AllSettings) Collect(ch chan<- prometheus.Metric) {
 
 	var c int
 	for _, value := range asr {
-		if value.Settings.Index.Blocks.ReadOnly == "true" {
+		if value.Settings.IndexInfo.Blocks.ReadOnly == "true" {
 			c++
 		}
 	}
